@@ -19,6 +19,7 @@
       <Filter>Classes</Filter>
     </ClCompile>
     <ClCompile Include="Animal.cpp" />
+    <ClCompile Include="GameScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -31,5 +32,6 @@
       <Filter>Classes</Filter>
     </ClInclude>
     <ClInclude Include="Animal.h" />
+    <ClInclude Include="GameScene.h" />
   </ItemGroup>
 </Project>
