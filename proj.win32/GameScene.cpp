@@ -1,5 +1,5 @@
 #include "GameScene.h"
-
+#include "Animal.h"
 
 GameScene::GameScene(void)
 {
@@ -79,7 +79,8 @@ bool GameScene::init()
 
     // add the sprite as a child to this layer
     this->addChild(pSprite, 0);
-    
+    Animal* ani = Animal::create(10001);
+	addChild(ani);
     return true;
 }
 
