@@ -20,6 +20,8 @@
     </ClCompile>
     <ClCompile Include="Animal.cpp" />
     <ClCompile Include="GameScene.cpp" />
+    <ClCompile Include="Map.cpp" />
+    <ClCompile Include="JoyPad.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -33,5 +35,8 @@
     </ClInclude>
     <ClInclude Include="Animal.h" />
     <ClInclude Include="GameScene.h" />
+    <ClInclude Include="config.h" />
+    <ClInclude Include="Map.h" />
+    <ClInclude Include="JoyPad.h" />
   </ItemGroup>
 </Project>

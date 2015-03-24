@@ -17,18 +17,24 @@ public:
 	};
 	static Animal* create(int roleId);
 	virtual bool initAnimalData();
-protected:
 	void walkTo(CCPoint pos);
 	void idle();
 	void attack(Animal* target,int hurt);
+protected:
 	CCAnimation* getAnimationByName(const char* pzName,int num = 8);
+	void playAnimation(CCAnimation* animation);
+	void correctPos(float &x,float &y);
 private:
 	int m_roleId;
+	int speed;
+	float width;
+	float height;
 	AnimalStatus m_status;
 	//CCAnimation* m_animationNow;
-	CCAnimation* walk;
-	CCAnimation* hurt;
-	CCAnimation* die;
+	CCAnimation* ani_walk;
+	CCAnimation* ani_hurt;
+	CCAnimation* ani_die;
+
 
 };
 
