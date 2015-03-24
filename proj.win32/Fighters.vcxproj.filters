@@ -22,6 +22,8 @@
     <ClCompile Include="GameScene.cpp" />
     <ClCompile Include="Map.cpp" />
     <ClCompile Include="JoyPad.cpp" />
+    <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Enemy.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -38,5 +40,7 @@
     <ClInclude Include="config.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="JoyPad.h" />
+    <ClInclude Include="Player.h" />
+    <ClInclude Include="Enemy.h" />
   </ItemGroup>
 </Project>

@@ -24,7 +24,6 @@ protected:
 	CCAnimation* getAnimationByName(const char* pzName,int num = 8);
 	void playAnimation(CCAnimation* animation);
 	void correctPos(float &x,float &y);
-private:
 	int m_roleId;
 	int speed;
 	float width;
@@ -34,7 +33,6 @@ private:
 	CCAnimation* ani_walk;
 	CCAnimation* ani_hurt;
 	CCAnimation* ani_die;
-
-
+private:
 };
 

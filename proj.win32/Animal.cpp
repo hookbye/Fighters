@@ -44,7 +44,7 @@ bool Animal::initAnimalData()
 	ani_hurt =  getAnimationByName("hurt",2);
 	ani_hurt->retain();
 
-	playAnimation(ani_die);
+	playAnimation(ani_walk);
 	return true;
 }
 void Animal::playAnimation(CCAnimation* animation)
