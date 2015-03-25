@@ -53,6 +53,7 @@ void Enemy::beAttacked(Animal* attacker,int hurt)
 		playAnimation(ani_die);
 		CCSequence* seq = CCSequence::createWithTwoActions(CCDelayTime::create(1.6),
 			CCCallFunc::create(this,callfunc_selector(Enemy::die)));
+		runAction(seq);
 	}
 	else
 	{
