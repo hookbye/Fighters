@@ -1,13 +1,18 @@
 #include "Player.h"
 
 
-Player::Player(void)
+Player::Player(void):ani_attack(NULL),ani_stand(NULL),ani_run(NULL),
+	ani_skill(NULL),skill_effect(NULL),attack_effect(NULL),
+	attEffNode(NULL),skillEffNode(NULL)
 {
+	attacks = CCArray::create();
+	attacks->retain();
 }
 
 
 Player::~Player(void)
 {
+	CC_SAFE_RELEASE(attacks);
 }
 Player* Player::create(int roleId)
 {
@@ -24,22 +29,46 @@ Player* Player::create(int roleId)
 }
 bool Player::initAnimalData()
 {
-	ani_walk = getAnimationByName("walk");
-	ani_walk->retain();
+	Animal::initAnimalData();
+	
+	ani_attack = getAnimationByName("attack",7);
+	ani_attack->retain();
 
-	CCString *frameName = CCString::createWithFormat("%d_walk_%04d.png",m_roleId,1);
+	ani_stand = getAnimationByName("stand");
+	ani_stand->retain();
+
+	ani_run = getAnimationByName("run");
+	ani_run->retain();
+
+	ani_skill = getAnimationByName("skill");
+	ani_skill->retain();
+
+	skill_effect = getAnimationByName("skill_effect");
+	skill_effect->retain();
+	attack_effect = getAnimationByName("attack_effect");
+	attack_effect->retain();
+	
+
+	attEffNode = CCNode::create();
+	attEffNode->retain();
+	addChild(attEffNode);
+
+	skillEffNode = CCNode::create();
+	skillEffNode->retain();
+	addChild(skillEffNode);
+
+	CCString *frameName = CCString::createWithFormat("%d_stand_%04d.png",m_roleId,1);
 	CCSpriteFrame* frame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(frameName->getCString());
 	this->setDisplayFrame(frame);
 	width = frame->getRect().size.width;
 	height = frame->getRect().size.height;
-	CCLog("%f,%f",getContentSize().width,height);
 	
-	ani_die = getAnimationByName("die");
-	ani_die->retain();
-
-	ani_hurt =  getAnimationByName("hurt",2);
-	ani_hurt->retain();
-
-	playAnimation(ani_walk);
+	playAnimation(ani_stand);
 	return true;
 }
+
+ void Player::attack(Animal* target)
+ {
+	 Animal::attack(target);
+	 playAnimation(ani_attack);
+ }

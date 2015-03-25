@@ -1,9 +1,9 @@
 #include "Animal.h"
 
 
-Animal::Animal(void):speed(1),
-	ani_walk(NULL),ani_die(NULL),ani_hurt(NULL),
-	width(0),height(0)
+Animal::Animal(void):speed(1),blood(100),attackNum(50),
+	ani_walk(NULL),ani_hurt(NULL),
+	width(0),height(0),m_status(IDLE)
 {
 }
 
@@ -28,6 +28,8 @@ Animal* Animal::create(int roleId)
 }
 bool Animal::initAnimalData()
 {
+	CCString * findPath = CCString::createWithFormat("model/%d",m_roleId);
+	CCFileUtils::sharedFileUtils()->addSearchPath(findPath->getCString());
 	ani_walk = getAnimationByName("walk");
 	ani_walk->retain();
 
@@ -38,21 +40,25 @@ bool Animal::initAnimalData()
 	height = frame->getRect().size.height;
 	CCLog("%f,%f",getContentSize().width,height);
 	
-	ani_die = getAnimationByName("die");
-	ani_die->retain();
 
 	ani_hurt =  getAnimationByName("hurt",2);
 	ani_hurt->retain();
 
-	playAnimation(ani_walk);
 	return true;
 }
-void Animal::playAnimation(CCAnimation* animation)
+void Animal::playAnimation(CCAnimation* animation,int repeat)
 {
-	CCAnimate * animate = CCAnimate::create(animation);
-	this->runAction(CCRepeatForever::create(animate));
+	if(animation)
+	{
+		stopAllActions();
+		CCAnimate * animate = CCAnimate::create(animation);
+		if(repeat > 0)
+			this->runAction(CCRepeat::create(animate,repeat));
+		else
+			this->runAction(CCRepeatForever::create(animate));
+	}
 }
-CCAnimation* Animal::getAnimationByName(const char* pzName,int num)
+CCAnimation* Animal::getAnimationByName(const char* pzName,int num,float defaultTime)
 {
 	CCString * strPlist = CCString::createWithFormat("%d_%s.plist",m_roleId,pzName);
 	CCString * strPng = CCString::createWithFormat("%d_%s.png",m_roleId,pzName);
@@ -66,7 +72,7 @@ CCAnimation* Animal::getAnimationByName(const char* pzName,int num)
 		frame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(frameName->getCString());
 		animation->addSpriteFrame(frame);
 	}
-	animation->setDelayPerUnit(0.2f);
+	animation->setDelayPerUnit(defaultTime);
 	return animation;
 }
 void Animal::correctPos(float &x,float &y)
@@ -87,6 +93,11 @@ void Animal::correctPos(float &x,float &y)
 
 void Animal::walkTo(CCPoint pos)
 {
+	if(pos.x == 0 && pos.y == 0)
+	{
+		setStatus(IDLE);
+		return;
+	}
 	CCPoint tpos = ccpAdd(getPosition(),ccp(pos.x*speed,pos.y*speed));
 	correctPos(tpos.x,tpos.y);
 	if(tpos.x < getPositionX())
@@ -94,10 +105,59 @@ void Animal::walkTo(CCPoint pos)
 	else
 		setFlipX(false);
 	setPosition(tpos);
+	if(m_status != WALK)
+	{
+		m_status = WALK;
+		playAnimation(ani_walk,-1);
+	}
 }
 void Animal::idle()
 {
 }
-void Animal::attack(Animal* target,int hurt)
+void Animal::attack(Animal* target)
 {
+	if(target && target->getStatus() != DIE)
+		target->beAttacked(this,attackNum);
+}
+void Animal::beAttacked(Animal* attacker,int hurt)
+{
+	blood -= hurt;
+	if(blood <= 0)
+	{
+		//
+	}
+	else
+	{
+		m_status = HURT;
+		playAnimation(ani_hurt);
+	}
+}
+void Animal::die()
+{
+	removeFromParent();
+}
+
+void Animal::setStatus(AnimalStatus st)
+{
+	m_status = st;
+	switch (st)
+	{
+	case IDLE:
+		stopAllActions();
+		break;
+	case WALK:
+		break;
+	case RUN:
+		break;
+	case ATTACK:
+		break;
+	case SKILL:
+		break;
+	case HURT:
+		break;
+	case DIE:
+		break;
+	default:
+		break;
+	}
 }

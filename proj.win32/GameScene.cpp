@@ -2,10 +2,13 @@
 
 GameScene::GameScene(void):map(NULL),player(NULL)
 {
+	enemies = CCArray::create();
+	enemies->retain();
 }
 
 GameScene::~GameScene(void)
 {
+	CC_SAFE_RELEASE(enemies);
 }
 
 CCScene* GameScene::scene()
@@ -49,7 +52,7 @@ bool GameScene::init()
     pSprite->setPosition(ccp(visibleSize.width/2 + origin.x, visibleSize.height/2 + origin.y));
     this->addChild(pSprite, 0);
 	loadMap(40001);
-    player = Animal::create(10001);
+    player = Player::create(20001);
 	player->retain();
 	addChild(player);
 
@@ -66,10 +69,47 @@ void GameScene::loadMap(int mapId)
 	map = Map::create(40001);
 	map->retain();
 	addChild(map);
+	initEnemies();
+}
+void GameScene::initEnemies()
+{
+	Enemy* ani = Enemy::create(10001);
+	ani->setPosition(ccp(200,200));
+	addChild(ani);
+	enemies->addObject(ani);
+}
+CCArray* GameScene::getEnemies()
+{
+	CCArray* result = CCArray::create();
+	int count = enemies->count();
+	Animal* ani;
+	for(int i=0;i<count;i++)
+	{
+		ani = (Animal*)enemies->objectAtIndex(i);
+		if(player->boundingBox().intersectsRect(ani->boundingBox()))
+			result->addObject(ani);
+	}
+	return result;
 }
 void GameScene::move(CCPoint normal)
 {
 	player->walkTo(normal);
+}
+void GameScene::attack(int skillid)
+{
+	if(skillid == 1)
+	{
+		CCArray* enemyAr = getEnemies();
+		Animal* ani;
+		for(int i=0;i<enemyAr->count();i++)
+		{
+			ani = (Animal*)enemyAr->objectAtIndex(i);
+			player->attack(ani);
+		}
+	}
+	else if (skillid == 2)
+	{
+	}
 }
 void GameScene::update(float dt)
 {

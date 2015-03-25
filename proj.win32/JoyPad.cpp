@@ -55,6 +55,7 @@ bool JoyPad::initSkillController()
 		//skill1->retain();
 		skill1->setPosition(ccp(origin.x + visibleSize.width - skill1->getContentSize().width/2 ,
                                 origin.y + skill1->getContentSize().height/2));
+		skill1->setTag(1);
 		CCMenuItemSprite* skill2 = CCMenuItemSprite::create(CCSprite::createWithSpriteFrameName("joyStickskillButton.png"),
 			CCSprite::createWithSpriteFrameName("joyStickskillButtonHighLight.png"),
 			CCSprite::createWithSpriteFrameName("joyStickskillButtonGray.png"),
@@ -62,7 +63,7 @@ bool JoyPad::initSkillController()
 		//skill1->retain();
 		skill2->setPosition(ccp(origin.x + visibleSize.width - skill2->getContentSize().width - 50 -  skill1->getContentSize().width/2,
                                 origin.y + skill1->getContentSize().height/2-30));
-
+		skill2->setTag(2);
 		CCMenu* menu = CCMenu::create(skill1,skill2,NULL);
 		menu->setPosition(ccp(0,0));
 		addChild(menu,1);
@@ -73,6 +74,13 @@ bool JoyPad::initSkillController()
 }
 void JoyPad::skillButtonCallback(CCObject* pSender)
 {
+	int tag = ((CCMenuItem*)pSender)->getTag();
+	if(tag == 1)
+	{
+		gameLayer->attack(tag);
+	}else if(tag == 2)
+	{
+	}
 }
 void JoyPad::onEnter()
 {
@@ -118,6 +126,7 @@ void JoyPad::ccTouchEnded(CCTouch* pTouch,CCEvent* pEvent)
 {
 	stick->setPosition(stickCenterPos);
 	moveVec = CCPointZero;
+	move(moveVec);
 	btouchDirStick = false;
 }
 void JoyPad::move(CCPoint normalize)
@@ -130,5 +139,8 @@ void JoyPad::update(float dt)
 	if(btouchDirStick)
 	{
 		move(moveVec);
+	}else
+	{
+		//CCLog("stop");
 	}
 }
