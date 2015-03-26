@@ -18,7 +18,7 @@ public:
 	void loadMap(int mapId);
 	void initEnemies();
 
-	void move(CCPoint normal);
+	void move(CCPoint normal,bool isRun = false);
 	void attack(int skillid);
 	CCArray* getEnemies();
 

@@ -91,29 +91,25 @@ CCArray* GameScene::getEnemies()
 	}
 	return result;
 }
-void GameScene::move(CCPoint normal)
+void GameScene::move(CCPoint normal,bool isRun)
 {
-	player->walkTo(normal);
+	player->walkTo(normal,isRun);
 }
 void GameScene::attack(int skillid)
 {
-	if(skillid == 1)
+	CCArray* enemyAr = getEnemies();
+	Animal* ani;
+	for(int i=0;i<enemyAr->count();i++)
 	{
-		CCArray* enemyAr = getEnemies();
-		Animal* ani;
-		for(int i=0;i<enemyAr->count();i++)
-		{
-			ani = (Animal*)enemyAr->objectAtIndex(i);
-			player->attack(ani);
-		}
+		ani = (Animal*)enemyAr->objectAtIndex(i);
+		player->attack(ani,skillid);
 	}
-	else if (skillid == 2)
-	{
-	}
+	
 }
 void GameScene::update(float dt)
 {
 	joyPad->update(dt);
+	player->update(dt);
 }
 void GameScene::menuCloseCallback(CCObject* pSender)
 {

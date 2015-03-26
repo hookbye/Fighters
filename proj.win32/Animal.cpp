@@ -1,17 +1,35 @@
 #include "Animal.h"
 
 
-Animal::Animal(void):speed(1),blood(100),attackNum(50),
+Animal::Animal(void):speed(1),blood(100),attackNum(5),
 	ani_walk(NULL),ani_hurt(NULL),
 	width(0),height(0),m_status(IDLE)
 {
+	fsm = FSM::create("idleing");
+	fsm->retain();
 }
 
 
 Animal::~Animal(void)
 {
+	CC_SAFE_RELEASE(fsm);
 }
 
+void Animal::initFSM()
+{
+	fsm->addState("walking",[&](){onWalk();})
+		->addState("idleing",[&](){onIdle();})
+		->addState("hurting",[&](){onHurt();})
+		;
+	fsm->addEvent("walk","idleing","walking")
+		->addEvent("idle","walking","idleing")
+		->addEvent("idle","hurting","idleing")
+		->addEvent("hurt","walking","hurting")
+		->addEvent("hurt","idleing","hurting")
+		;
+	
+
+}
 
 Animal* Animal::create(int roleId)
 {
@@ -21,6 +39,7 @@ Animal* Animal::create(int roleId)
 		ani->autorelease();
 		ani->m_roleId = roleId;
 		ani->initAnimalData();
+		ani->initFSM();
 		return ani;
 	}
 	CC_SAFE_DELETE(ani);
@@ -41,24 +60,30 @@ bool Animal::initAnimalData()
 	CCLog("%f,%f",getContentSize().width,height);
 	
 
-	ani_hurt =  getAnimationByName("hurt",2);
+	ani_hurt =  getAnimationByName("hurt");
 	ani_hurt->retain();
 
 	return true;
 }
 void Animal::playAnimation(CCAnimation* animation,int repeat)
 {
+	stopAllActions();
 	if(animation)
 	{
-		stopAllActions();
 		CCAnimate * animate = CCAnimate::create(animation);
 		if(repeat > 0)
-			this->runAction(CCRepeat::create(animate,repeat));
+			this->runAction(CCSequence::createWithTwoActions( CCRepeat::create(animate,repeat),
+			CCCallFunc::create(this,callfunc_selector(Animal::animationCallBack))));
 		else
 			this->runAction(CCRepeatForever::create(animate));
+	}else{
 	}
 }
-CCAnimation* Animal::getAnimationByName(const char* pzName,int num,float defaultTime)
+void Animal::animationCallBack()
+{
+	fsm->doEvent("idle");
+}
+CCAnimation* Animal::getAnimationByName(const char* pzName,float defaultTime,int num)
 {
 	CCString * strPlist = CCString::createWithFormat("%d_%s.plist",m_roleId,pzName);
 	CCString * strPng = CCString::createWithFormat("%d_%s.png",m_roleId,pzName);
@@ -66,12 +91,18 @@ CCAnimation* Animal::getAnimationByName(const char* pzName,int num,float default
 	CCAnimation* animation = CCAnimation::create();
 	
 	CCSpriteFrame* frame;
+	int realNum = 1.0f;
 	for (int i=0;i<num;i++)
 	{
 		CCString *frameName = CCString::createWithFormat("%d_%s_%04d.png",m_roleId,pzName,i);
 		frame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(frameName->getCString());
-		animation->addSpriteFrame(frame);
+		if(frame)
+			animation->addSpriteFrame(frame);
+		else
+			break;
+		realNum = i;
 	}
+	//CCLog("frame time : %f, %f,%d",defaultTime/realNum,defaultTime,realNum);
 	animation->setDelayPerUnit(defaultTime);
 	return animation;
 }
@@ -91,11 +122,12 @@ void Animal::correctPos(float &x,float &y)
 }
 	
 
-void Animal::walkTo(CCPoint pos)
+void Animal::walkTo(CCPoint pos,bool isRun)
 {
 	if(pos.x == 0 && pos.y == 0)
 	{
-		setStatus(IDLE);
+		//setStatus(IDLE);
+		fsm->doEvent("idle");
 		return;
 	}
 	CCPoint tpos = ccpAdd(getPosition(),ccp(pos.x*speed,pos.y*speed));
@@ -105,31 +137,40 @@ void Animal::walkTo(CCPoint pos)
 	else
 		setFlipX(false);
 	setPosition(tpos);
-	if(m_status != WALK)
+	if(fsm->getState() != "walking" && fsm->getState() != "running")
 	{
-		m_status = WALK;
-		playAnimation(ani_walk,-1);
+		fsm->doEvent("walk");
+		//playAnimation(ani_walk,-1);
+	}else if(isRun && fsm->getState() != "running" )
+	{
+		fsm->doEvent("walk");
+	}else if(!isRun && fsm->getState() != "walking")
+	{
+		fsm->doEvent("walk");
 	}
 }
 void Animal::idle()
 {
 }
-void Animal::attack(Animal* target)
+void Animal::run()
 {
-	if(target && target->getStatus() != DIE)
+}
+void Animal::attack(Animal* target,int skillid)
+{
+	if(target && target->getStatus() != "die")
 		target->beAttacked(this,attackNum);
 }
 void Animal::beAttacked(Animal* attacker,int hurt)
 {
 	blood -= hurt;
+
 	if(blood <= 0)
 	{
 		//
 	}
 	else
 	{
-		m_status = HURT;
-		playAnimation(ani_hurt);
+		fsm->doEvent("hurt");
 	}
 }
 void Animal::die()
@@ -137,27 +178,17 @@ void Animal::die()
 	removeFromParent();
 }
 
-void Animal::setStatus(AnimalStatus st)
+void Animal::onWalk()
 {
-	m_status = st;
-	switch (st)
-	{
-	case IDLE:
-		stopAllActions();
-		break;
-	case WALK:
-		break;
-	case RUN:
-		break;
-	case ATTACK:
-		break;
-	case SKILL:
-		break;
-	case HURT:
-		break;
-	case DIE:
-		break;
-	default:
-		break;
-	}
+	speed = 1;
+	playAnimation(ani_walk,-1);
+}
+void Animal::onIdle()
+{
+	speed = 1;
+	playAnimation(nullptr);
+}
+void Animal::onHurt()
+{
+	playAnimation(ani_hurt);
 }

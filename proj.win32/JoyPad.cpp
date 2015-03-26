@@ -2,7 +2,7 @@
 #include "GameScene.h"
 
 JoyPad::JoyPad(void):gameLayer(NULL),stick(NULL),stickBg(NULL),
-	stickCenterPos(CCPointZero),btouchDirStick(false),moveVec(CCPointZero)
+	stickCenterPos(CCPointZero),btouchDirStick(false),moveVec(CCPointZero),isToRun(false)
 {
 }
 
@@ -75,12 +75,7 @@ bool JoyPad::initSkillController()
 void JoyPad::skillButtonCallback(CCObject* pSender)
 {
 	int tag = ((CCMenuItem*)pSender)->getTag();
-	if(tag == 1)
-	{
-		gameLayer->attack(tag);
-	}else if(tag == 2)
-	{
-	}
+	gameLayer->attack(tag);
 }
 void JoyPad::onEnter()
 {
@@ -115,9 +110,11 @@ void JoyPad::ccTouchMoved(CCTouch* pTouch,CCEvent* pEvent)
 		if(dis<stickRadius)
 		{
 			stick->setPosition(pos);
+			isToRun = false;
 		}else
 		{
 			stick->setPosition(targetPos);
+			isToRun = true;
 		}
 		moveVec = normal;
 	}
@@ -126,19 +123,20 @@ void JoyPad::ccTouchEnded(CCTouch* pTouch,CCEvent* pEvent)
 {
 	stick->setPosition(stickCenterPos);
 	moveVec = CCPointZero;
-	move(moveVec);
+	isToRun = false;
+	move(moveVec,isToRun);
 	btouchDirStick = false;
 }
-void JoyPad::move(CCPoint normalize)
+void JoyPad::move(CCPoint normalize,bool isRun)
 {
-	gameLayer->move(normalize);
+	gameLayer->move(normalize,isRun);
 }
 
 void JoyPad::update(float dt)
 {
 	if(btouchDirStick)
 	{
-		move(moveVec);
+		move(moveVec,isToRun);
 	}else
 	{
 		//CCLog("stop");

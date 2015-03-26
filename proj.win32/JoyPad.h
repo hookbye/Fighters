@@ -21,7 +21,7 @@ public:
 	bool initDirController();
 	bool initSkillController();
 	//void transToDir(CCPoint normalize);
-	void move(CCPoint normalize);
+	void move(CCPoint normalize,bool isRun = false);
 	void skillButtonCallback(CCObject* pSender);
 
 	void update(float dt);
@@ -31,7 +31,7 @@ private:
 	CCSprite* stickBg;
 	CCPoint stickCenterPos;
 	bool btouchDirStick;
-
+	bool isToRun;
 	CCPoint moveVec;
 };
 

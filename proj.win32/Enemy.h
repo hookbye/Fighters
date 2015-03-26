@@ -12,6 +12,7 @@ public:
 	void attack(Animal* target);
 	void beAttacked(Animal* attacker,int hurt);
 	void die();
+	void initFSM();
 protected:
 	CCAnimation* ani_die;
 	/*CCAnimation* ani_run;

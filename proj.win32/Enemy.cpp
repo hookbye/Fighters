@@ -9,6 +9,18 @@ Enemy::Enemy(void):ani_die(NULL)
 Enemy::~Enemy(void)
 {
 }
+void Enemy::initFSM()
+{
+	Animal::initFSM();
+	fsm->addState("dieing",[&](){playAnimation(ani_die);})
+		->addState("hurting",[&](){playAnimation(ani_hurt);})
+		;
+	fsm->addEvent("die","walking","dieing")
+		->addEvent("die","hurting","dieing")
+		->addEvent("hurt","walking","hurting")
+		->addEvent("hurt","idleing","hurting")
+		;
+}
 Enemy* Enemy::create(int roleId)
 {
 	Enemy* ani = new Enemy();
@@ -17,6 +29,7 @@ Enemy* Enemy::create(int roleId)
 		ani->autorelease();
 		ani->m_roleId = roleId;
 		ani->initAnimalData();
+		ani->initFSM();
 		return ani;
 	}
 	CC_SAFE_DELETE(ani);
