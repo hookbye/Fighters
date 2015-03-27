@@ -72,11 +72,25 @@ Player* Player::create(int roleId)
 		ani->autorelease();
 		ani->m_roleId = roleId;
 		ani->initAnimalData();
+		ani->initBasicData();
 		ani->initFSM();
 		return ani;
 	}
 	CC_SAFE_DELETE(ani);
 	return NULL;
+}
+void Player::initBasicData()
+{
+	attackNums[0] = 5;
+	attackNums[2] = 10;
+	attackNums[3] = 15;
+	attackNums[4] = 20;
+	attackNums[5] = 25;
+	attackNums[6] = 30;
+	
+	walkspeed = 1;
+	runspeed = 2;
+	 
 }
 bool Player::initAnimalData()
 {
@@ -109,19 +123,23 @@ bool Player::initAnimalData()
 	attack_effect->retain();
 	
 
-	attEffNode = CCNode::create();
+	attEffNode = CCSprite::create("CloseNormal.png");
+	attEffNode->setVisible(false);
 	attEffNode->retain();
 	addChild(attEffNode);
 
-	skillEffNode = CCNode::create();
+	skillEffNode = CCSprite::create("CloseNormal.png");
+	skillEffNode->setVisible(false);
 	skillEffNode->retain();
 	addChild(skillEffNode);
+	skillEffNode->setPosition(ccp(getContentSize().width/2,getContentSize().height/2-20));
+	attEffNode->setPosition(ccp(getContentSize().width/2,getContentSize().height/2));
 
-	CCString *frameName = CCString::createWithFormat("%d_stand_%04d.png",m_roleId,1);
+	/*CCString *frameName = CCString::createWithFormat("%d_stand_%04d.png",m_roleId,1);
 	CCSpriteFrame* frame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(frameName->getCString());
 	this->setDisplayFrame(frame);
 	width = frame->getRect().size.width;
-	height = frame->getRect().size.height;
+	height = frame->getRect().size.height;*/
 	
 	playAnimation(ani_stand);
 	return true;
@@ -135,7 +153,7 @@ void Player::run()
  {
 	 if(fsm->getState() != "attack")
 	 {
-		Animal::attack(target);
+		
 		if(skillid == 1)
 		{
 			fsm->doEvent("attack");
@@ -143,20 +161,34 @@ void Player::run()
 		{
 			fsm->doEvent("skill");
 		}
+		Animal::attack(target);
 	 }
  }
 
 void Player::onAttack()
 {
+	attackNum = attackNums[attackIndex%6];
 	playAnimation((CCAnimation*)attacks->objectAtIndex(attackIndex++%6));
+	
+	if(attackIndex%6 == 0)
+	{
+		attEffNode->setVisible(true);
+		attEffNode->runAction(CCAnimate::create(attack_effect));
+	}else
+	{
+		attEffNode->setVisible(false);
+	}
 }
 void Player::onRun()
 {
-	speed = 2;
+	speed = runspeed;
 	playAnimation(ani_run,-1);
 }
 void Player::onSkill()
 {
+	attackNum = attackNums[6];
+	skillEffNode->setVisible(true);
+	skillEffNode->runAction(CCAnimate::create(skill_effect));
 	playAnimation(ani_skill);
 }
 void Player::onHurt()
@@ -165,9 +197,17 @@ void Player::onHurt()
 }
 void Player::onStand()
 {
+	skillEffNode->setVisible(false);
+	attEffNode->setVisible(false);
 	playAnimation(ani_stand,-1);
 }
 
+void Player::setPosition(CCPoint tpos)
+{
+	Animal::setPosition(tpos);
+	skillEffNode->setPosition(ccp(getContentSize().width/2,getContentSize().height/2-20));
+	attEffNode->setPosition(ccp(getContentSize().width/2,getContentSize().height/2));
+}
 void Player::update(float dt)
 {
 	if(fsm->getState() == "attacking")

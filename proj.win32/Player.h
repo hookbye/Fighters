@@ -8,6 +8,7 @@ public:
 	~Player(void);
 	static Player* create(int roleId);
 	virtual bool initAnimalData();
+	virtual void initBasicData();
 
 	void attack(Animal* target,int skillid = 1);
 	void run();
@@ -19,10 +20,13 @@ public:
 	virtual void onHurt();
 	virtual void onStand();
 
+	void setPosition(CCPoint pos);
 	void update(float dt);
 private:
 	float attackInterval;
 	int attackIndex;
+protected:
+	int attackNums[7];
 protected:
 	CCAnimation* ani_stand;
 	CCAnimation* ani_run;
@@ -32,8 +36,8 @@ protected:
 	CCAnimation* skill_effect;
 	CCArray* attacks;
 
-	CCNode* attEffNode;
-	CCNode* skillEffNode;
+	CCSprite* attEffNode;
+	CCSprite* skillEffNode;
 	 
 };
 

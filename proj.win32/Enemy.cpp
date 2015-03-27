@@ -12,6 +12,7 @@ Enemy::~Enemy(void)
 void Enemy::initFSM()
 {
 	Animal::initFSM();
+	fsm->setOnEnter("idleing",[&](){onWalk();});
 	fsm->addState("dieing",[&](){playAnimation(ani_die);})
 		->addState("hurting",[&](){playAnimation(ani_hurt);})
 		;
@@ -19,6 +20,7 @@ void Enemy::initFSM()
 		->addEvent("die","hurting","dieing")
 		->addEvent("hurt","walking","hurting")
 		->addEvent("hurt","idleing","hurting")
+		->addEvent("idle","hurting","idleing")
 		;
 }
 Enemy* Enemy::create(int roleId)
@@ -62,7 +64,6 @@ void Enemy::beAttacked(Animal* attacker,int hurt)
 	Animal::beAttacked(attacker,hurt);
 	if(blood <= 0)
 	{
-		m_status = DIE;
 		playAnimation(ani_die);
 		CCSequence* seq = CCSequence::createWithTwoActions(CCDelayTime::create(1.6),
 			CCCallFunc::create(this,callfunc_selector(Enemy::die)));
