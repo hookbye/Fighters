@@ -7,7 +7,7 @@
 USING_NS_CC;
 USING_NS_CC_EXT;
 class Animal :
-	public CCSprite
+	public CCNode
 {
 	///////////////// 实现 物理引擎刚体 /////////
 //protected:
@@ -73,7 +73,9 @@ public:
 	virtual void onIdle();
 	virtual void onHurt();
 
-
+	bool canAttack(Animal* target);
+	void setHp(float hp);
+	void updateHp();
 private:
 	//void initPhysicsBody();
 
@@ -89,29 +91,35 @@ protected:
 	CC_SYNTHESIZE(CCSize, bodySize,BodySize);
 	CC_SYNTHESIZE(CCRect, bodyRect,BodyRect);
 	CC_SYNTHESIZE(CCRect, attackRect,AttackRect);
+	CC_SYNTHESIZE(float, attackDis,AttackDis);
 protected:
-	void setHp(float hp);
-	void updateHp();
+	
 protected:
 	int m_roleId;
 	int speed;
 	int walkspeed;
 	int runspeed;
-	int blood;
+	float blood;
+	float hp;
 	int attackNum;
 
 	float width;
 	float height;
-	//CCAnimation* m_animationNow;
+	CCAnimation* m_animationNow;
 	CCAnimation* ani_walk;
 	CCAnimation* ani_hurt;
 	
 
 	FSM* fsm;
-private:
+protected:
+	CCSprite* body;
 	CCLabelTTF* hurmLabel;
+	CCProgressTimer* hpBar;
+	CCProgressTimer* mpBar;
+	 
 };
 class AnimalNode
 	:public CCNode
 {
+
 };

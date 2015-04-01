@@ -1,8 +1,11 @@
 #include "Animal.h"
 
+const int ATTACK_TAG = 10010;
 
-Animal::Animal(void):speed(0),walkspeed(1),runspeed(2),blood(100),attackNum(5),
-	ani_walk(NULL),ani_hurt(NULL),hurmLabel(NULL),
+Animal::Animal(void):body(NULL),speed(0),walkspeed(1),runspeed(2),blood(100),hp(100),attackNum(5),
+	ani_walk(NULL),ani_hurt(NULL),hurmLabel(NULL),m_animationNow(NULL),
+	hpBar(NULL),mpBar(NULL),
+	attackDis(0),attackRect(CCRectZero),bodyRect(CCRectZero),bodySize(CCSizeZero),
 	width(0),height(0)
 	//,m_bIgnoreBodyRotation(false)
 //#if CC_ENABLE_CHIPMUNK_INTEGRATION
@@ -41,7 +44,8 @@ void Animal::initFSM()
 Animal* Animal::create(int roleId)
 {
 	Animal* ani = new Animal();
-	if (ani && ani->initWithFile("CloseNormal.png"))
+	
+	if (ani && ani->init())
 	{
 		ani->autorelease();
 		ani->m_roleId = roleId;
@@ -55,30 +59,59 @@ Animal* Animal::create(int roleId)
 }
 void Animal::initBasicData()
 {
-	hurmLabel  = CCLabelTTF::create(" ", "Arial", 24);
+	CCFileUtils::sharedFileUtils()->addSearchPath("fightUI/");
+	CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("fightUI.plist","fightUI.png");
+	
+	CCSprite* barSpr = CCSprite::createWithSpriteFrameName("fightUI_greenBar.png");
+	hpBar = CCProgressTimer::create(barSpr);
+	hpBar->setType(kCCProgressTimerTypeBar);
+	hpBar->setPercentage(100);
+	hpBar->setMidpoint(ccp(0,0));
+	hpBar->setBarChangeRate(ccp(1,0));
+	hpBar->setScaleX((blood)/barSpr->getContentSize().width);
+	hpBar->setScaleY(0.3);
+	hpBar->retain();
+	hpBar->setPosition(ccp(getContentSize().width/2,getContentSize().height/2+getBodySize().height/2));
+    this->addChild(hpBar, 1);
+	//CCLog("888888888888   %f,  %f,%f",getContentSize().width/2,getContentSize().height/2,getContentSize().height/2+getBodySize().height/2);
+	hurmLabel  = CCLabelTTF::create("100", "arial", 18);
 	hurmLabel->retain();
     // position the label on the center of the screen
-    hurmLabel->setPosition(ccp(getContentSize().width/2,getContentSize().height+40));
-    this->addChild(hurmLabel, 1);
+    hurmLabel->setPosition(ccp(getContentSize().width/2,getContentSize().height/2+getBodySize().height/2));
+    this->addChild(hurmLabel, 2);
+
+	CCLayerColor* center = CCLayerColor::create(ccc4(255,255,0,128),10,10);
+	center->setPosition(ccp(getContentSize().width/2,getContentSize().height/2));
+	addChild(center,33);
+	CCLayerColor* border = CCLayerColor::create(ccc4(255,0,0,128),body->getContentSize().width,body->getContentSize().height);
+	//border->setPosition(ccp(-body->getContentSize().width/2,-body->getContentSize().height/2));
+	//body->addChild(border,33);
+	
 }
 bool Animal::initAnimalData()
 {
+	
 	CCString * findPath = CCString::createWithFormat("model/%d",m_roleId);
 	CCFileUtils::sharedFileUtils()->addSearchPath(findPath->getCString());
 	ani_walk = getAnimationByName("walk");
 	ani_walk->retain();
 
-	CCString *frameName = CCString::createWithFormat("%d_walk_%04d.png",m_roleId,1);
+	CCString *frameName = CCString::createWithFormat("%d_walk_%04d.png",m_roleId,0);
 	CCSpriteFrame* frame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(frameName->getCString());
-	this->setDisplayFrame(frame);
+	body = CCSprite::createWithSpriteFrameName(frameName->getCString());
+	//body->setAnchorPoint(ccp(0,0));
+	body->setPosition(ccp(0,0));
+	body->retain();
+	addChild(body);
+
 	bodySize.width = frame->getRect().size.width;
 	bodySize.height = frame->getRect().size.height;
 	CCLog("%f,%f",bodySize.width,bodySize.height);
 	float posx = getPositionX(),posy = getPositionY();
 	
-	bodyRect = CCRect(posx - bodySize.width/2,posy - bodySize.height/2,bodySize.width,bodySize.height);
+	bodyRect = CCRect(posx - bodySize.width/2,posy - bodySize.height/2,bodySize.height/2,bodySize.height);
 
-	attackRect = CCRect(posx - bodySize.width/2,posy - bodySize.height/2,bodySize.width*2,bodySize.height);
+	attackRect = CCRect(posx - bodySize.width/2,posy - bodySize.height/2,bodySize.height,bodySize.height);
 
 	ani_hurt =  getAnimationByName("hurt",0.2);
 	ani_hurt->retain();
@@ -90,15 +123,15 @@ bool Animal::initAnimalData()
 }
 void Animal::playAnimation(CCAnimation* animation,int repeat)
 {
-	stopAllActions();
+	body->stopAllActions();
 	if(animation)
 	{
 		CCAnimate * animate = CCAnimate::create(animation);
 		if(repeat > 0)
-			this->runAction(CCSequence::createWithTwoActions( CCRepeat::create(animate,repeat),
+			body->runAction(CCSequence::createWithTwoActions( CCRepeat::create(animate,repeat),
 			CCCallFunc::create(this,callfunc_selector(Animal::animationCallBack))));
 		else
-			this->runAction(CCRepeatForever::create(animate));
+			body->runAction(CCRepeatForever::create(animate));
 	}else{
 	}
 }
@@ -157,11 +190,11 @@ void Animal::walkTo(CCPoint pos,bool isRun)
 	correctPos(tpos.x,tpos.y);
 	if(tpos.x < getPositionX())
 	{
-		setFlipX(true);
+		body->setFlipX(true);
 	}
 	else
 	{
-		setFlipX(false);
+		body->setFlipX(false);
 	}
 	setPosition(tpos);
 	if(fsm->getState() != "walking" && fsm->getState() != "running")
@@ -175,19 +208,22 @@ void Animal::walkTo(CCPoint pos,bool isRun)
 	{
 		fsm->doEvent("walk");
 	}
+	
 }
 void Animal::setPosition(CCPoint tpos)
 {
-	CCSprite::setPosition(tpos);
-	if(isFlipX())
+	CCNode::setPosition(tpos);
+	if(body->isFlipX())
 	{
-		attackRect = CCRect(tpos.x - bodySize.width*1.5,tpos.y - bodySize.height/2,bodySize.width,bodySize.height);
+		attackRect = CCRect(tpos.x - bodySize.width*1.5,tpos.y - bodySize.height/2,attackDis,bodySize.height);
 	}
 	else
 	{
-		attackRect = CCRect(tpos.x - bodySize.width/2,tpos.y - bodySize.height/2,bodySize.width*2,bodySize.height);
+		attackRect = CCRect(tpos.x - bodySize.width/2,tpos.y - bodySize.height/2,attackDis,bodySize.height);
 	}
 	bodyRect = CCRect(tpos.x - bodySize.width/2,tpos.y - bodySize.height/2,bodySize.width,bodySize.height);
+	//setContentSize(bodySize);
+	setZOrder(480-tpos.y);
 }
 void Animal::idle()
 {
@@ -195,25 +231,38 @@ void Animal::idle()
 void Animal::run()
 {
 }
+bool Animal::canAttack(Animal* target)
+{
+	if(!target)
+		return false;
+	CCRect attRect = getAttackRect();
+	CCRect eneBody = target->getBodyRect();
+	if(attRect.intersectsRect(eneBody)&& (abs(getPositionY() - target->getPositionY()) < 50))
+		return true;
+	return false;
+
+}
 void Animal::attack(Animal* target,int skillid)
 {
 	if(target && target->getStatus() != "die")
 	{
 		target->beAttacked(this,attackNum);
-		CCString* str = CCString::createWithFormat("%d",attackNum);
-		//hurmLabel->setString(str->getCString().c_str());
+		
 	}
 }
 void Animal::beAttacked(Animal* attacker,int hurt)
 {
-	blood -= hurt;
-
-	if(blood <= 0)
+	hp -= hurt;
+	CCString* str = CCString::createWithFormat("%.0f",hp>0?hp:0);
+	hurmLabel->setString(str->getCString());
+	hpBar->setPercentage(hp/blood*100);
+	if(hp <= 0)
 	{
 		//
 	}
 	else
 	{
+		
 		fsm->doEvent("hurt");
 	}
 }
@@ -437,3 +486,6 @@ void Animal::onHurt()
 //}
 //
 //#endif
+
+
+//AnimalNode*****************************************************************

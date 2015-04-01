@@ -33,19 +33,19 @@ bool GameScene::init()
     
     CCSize visibleSize = CCDirector::sharedDirector()->getVisibleSize();
     CCPoint origin = CCDirector::sharedDirector()->getVisibleOrigin();
- //   CCMenuItemImage *pCloseItem = CCMenuItemImage::create(
- //                                       "CloseNormal.png",
- //                                       "CloseSelected.png",
- //                                       this,
- //                                       menu_selector(GameScene::menuCloseCallback));
- //   
-	//pCloseItem->setPosition(ccp(origin.x + visibleSize.width - pCloseItem->getContentSize().width/2 ,
- //                               origin.y + pCloseItem->getContentSize().height/2));
+    CCMenuItemImage *pCloseItem = CCMenuItemImage::create(
+                                        "CloseNormal.png",
+                                        "CloseSelected.png",
+                                        this,
+                                        menu_selector(GameScene::menuCloseCallback));
+    
+	pCloseItem->setPosition(ccp(origin.x + visibleSize.width - pCloseItem->getContentSize().width/2 ,
+		origin.y+ visibleSize.height - pCloseItem->getContentSize().height));
 
- //   // create menu, it's an autorelease object
- //   CCMenu* pMenu = CCMenu::create(pCloseItem, NULL);
- //   pMenu->setPosition(CCPointZero);
- //   this->addChild(pMenu, 1);
+    // create menu, it's an autorelease object
+    CCMenu* pMenu = CCMenu::create(pCloseItem, NULL);
+    pMenu->setPosition(CCPointZero);
+    this->addChild(pMenu, 1);
     
     //CCLabelTTF* pLabel = CCLabelTTF::create("Hello World", "Arial", 24);
     //
@@ -59,7 +59,7 @@ bool GameScene::init()
 
 	loadMap(40001);
 	//initPhysics();
-    player = Player::create(20001);
+    player = Player::create(20002);
 	
 	player->retain();
 	addChild(player);
@@ -80,27 +80,26 @@ void GameScene::loadMap(int mapId)
 }
 void GameScene::initEnemies()
 {
-	Enemy* ani = Enemy::create(10001);
-	ani->setPosition(ccp(200,200));
-	addChild(ani);
-	enemies->addObject(ani);
+	
+	int enemiesar[] = {10001,10002,10003,10004,10005,10006};
+	for (int i=0;i<sizeof(enemiesar)/sizeof(int);i++)
+	{
+		Enemy* ani = Enemy::create(enemiesar[i]);
+		ani->setPosition(ccp(100*(i+1),200));
+		addChild(ani);
+		enemies->addObject(ani);
+	}
+	
 }
 CCArray* GameScene::getEnemies()
 {
 	CCArray* result = CCArray::create();
 	int count = enemies->count();
 	Animal* ani;
-	CCRect attRect = player->getAttackRect();
 	for(int i=0;i<count;i++)
 	{
 		ani = (Animal*)enemies->objectAtIndex(i);
-		CCRect eneBody = ani->getBodyRect();
-		CCLog("is intersects?%d attackRect (%f,%f,%f,%f) anibody rect(%f,%f,%f,%f) "
-			,attRect.intersectsRect(eneBody),
-			attRect.origin.x,attRect.origin.y,attRect.size.width,attRect.size.height,
-			eneBody.origin.x,eneBody.origin.y,eneBody.size.width,eneBody.size.height
-			);
-		if(attRect.intersectsRect(eneBody))
+		if(player->canAttack(ani))
 			result->addObject(ani);
 	}
 	return result;
@@ -219,7 +218,8 @@ void GameScene::menuCloseCallback(CCObject* pSender)
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WINRT) || (CC_TARGET_PLATFORM == CC_PLATFORM_WP8)
 	CCMessageBox("You pressed the close button. Windows Store Apps do not implement a close button.","Alert");
 #else
-    CCDirector::sharedDirector()->end();
+	initEnemies();
+    //CCDirector::sharedDirector()->end();
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
     exit(0);
 #endif

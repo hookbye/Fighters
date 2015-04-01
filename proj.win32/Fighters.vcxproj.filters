@@ -25,6 +25,7 @@
     <ClCompile Include="Player.cpp" />
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="FSM.cpp" />
+    <ClCompile Include="ProgressBar.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h">
@@ -44,5 +45,6 @@
     <ClInclude Include="Player.h" />
     <ClInclude Include="Enemy.h" />
     <ClInclude Include="FSM.h" />
+    <ClInclude Include="ProgressBar.h" />
   </ItemGroup>
 </Project>

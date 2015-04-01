@@ -26,11 +26,12 @@ void Enemy::initFSM()
 Enemy* Enemy::create(int roleId)
 {
 	Enemy* ani = new Enemy();
-	if (ani && ani->initWithFile("CloseNormal.png"))
+	if (ani && ani->init())
 	{
 		ani->autorelease();
 		ani->m_roleId = roleId;
 		ani->initAnimalData();
+		ani->initBasicData();
 		ani->initFSM();
 		return ani;
 	}
@@ -47,13 +48,16 @@ bool Enemy::initAnimalData()
 
 	CCString *frameName = CCString::createWithFormat("%d_walk_%04d.png",m_roleId,1);
 	CCSpriteFrame* frame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(frameName->getCString());
-	this->setDisplayFrame(frame);
+	/*this->setDisplayFrame(frame);*/
 	width = frame->getRect().size.width;
 	height = frame->getRect().size.height;
 	playAnimation(ani_walk,-1);
 	return true;
 }
-
+void Enemy::initBasicData()
+{
+	Animal::initBasicData();
+}
 void Enemy::attack(Animal* target)
 {
 	Animal::attack(target);
@@ -62,10 +66,10 @@ void Enemy::attack(Animal* target)
 void Enemy::beAttacked(Animal* attacker,int hurt)
 {
 	Animal::beAttacked(attacker,hurt);
-	if(blood <= 0)
+	if(hp <= 0)
 	{
-		playAnimation(ani_die);
-		CCSequence* seq = CCSequence::createWithTwoActions(CCDelayTime::create(1.6),
+		fsm->doEvent("die");
+		CCSequence* seq = CCSequence::createWithTwoActions(CCDelayTime::create(0.5),
 			CCCallFunc::create(this,callfunc_selector(Enemy::die)));
 		runAction(seq);
 	}

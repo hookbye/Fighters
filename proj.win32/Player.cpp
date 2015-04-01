@@ -67,7 +67,7 @@ void Player::initFSM()
 Player* Player::create(int roleId)
 {
 	Player* ani = new Player();
-	if (ani && ani->initWithFile("CloseNormal.png"))
+	if (ani && ani->init())
 	{
 		ani->autorelease();
 		ani->m_roleId = roleId;
@@ -81,7 +81,9 @@ Player* Player::create(int roleId)
 }
 void Player::initBasicData()
 {
+	Animal::initBasicData();
 	attackNums[0] = 5;
+	attackNums[1] = 8;
 	attackNums[2] = 10;
 	attackNums[3] = 15;
 	attackNums[4] = 20;
@@ -140,7 +142,6 @@ bool Player::initAnimalData()
 	this->setDisplayFrame(frame);
 	width = frame->getRect().size.width;
 	height = frame->getRect().size.height;*/
-	
 	playAnimation(ani_stand);
 	return true;
 }
@@ -168,16 +169,30 @@ void Player::run()
 void Player::onAttack()
 {
 	attackNum = attackNums[attackIndex%6];
-	playAnimation((CCAnimation*)attacks->objectAtIndex(attackIndex++%6));
+	m_animationNow = (CCAnimation*)attacks->objectAtIndex(attackIndex%6);
+	playAnimation(m_animationNow);
 	
 	if(attackIndex%6 == 0)
 	{
 		attEffNode->setVisible(true);
 		attEffNode->runAction(CCAnimate::create(attack_effect));
+
+		CCString *frameName = CCString::createWithFormat("%d_attack_%04d.png",m_roleId,3);
+		CCSpriteFrame* frame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(frameName->getCString());
+	
+		attackDis = frame->getRect().size.width;
+		attackRect.size.width = frame->getRect().size.width;
 	}else
 	{
 		attEffNode->setVisible(false);
+
+		CCString *frameName = CCString::createWithFormat("%d_attack_%d_%04d.png",m_roleId,attackIndex%6,3);
+		CCSpriteFrame* frame = CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(frameName->getCString());
+	
+		attackDis = frame->getRect().size.width;
+		attackRect.size.width = frame->getRect().size.width;
 	}
+	attackIndex++;
 }
 void Player::onRun()
 {
@@ -207,6 +222,9 @@ void Player::setPosition(CCPoint tpos)
 	Animal::setPosition(tpos);
 	skillEffNode->setPosition(ccp(getContentSize().width/2,getContentSize().height/2-20));
 	attEffNode->setPosition(ccp(getContentSize().width/2,getContentSize().height/2));
+	skillEffNode->setFlipX(body->isFlipX());
+	attEffNode->setFlipX(body->isFlipX());
+
 }
 void Player::update(float dt)
 {

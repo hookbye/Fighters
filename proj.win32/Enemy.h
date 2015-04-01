@@ -8,6 +8,7 @@ public:
 	~Enemy(void);
 	static Enemy* create(int roleId);
 	virtual bool initAnimalData();
+	void initBasicData();
 
 	void attack(Animal* target);
 	void beAttacked(Animal* attacker,int hurt);
